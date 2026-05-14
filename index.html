@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Crop Checker">
+<title>Cotton Crop Checker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --g:#1D9E75;--gl:#d4f0e4;--gd:#085041;
+  --am:#BA7517;--aml:#FAEEDA;--amd:#633806;
+  --rd:#E24B4A;--rdl:#FCEBEB;--rdd:#791F1F;
+  --bg:#ffffff;--bg2:#f5f4f0;--bg3:#eceae4;
+  --txt:#111111;--txt2:#555555;--txt3:#999999;
+  --bdr:1px solid #dddbd5;
+  --lw:152px;--cw:62px;
+}
+html{height:100%;-webkit-text-size-adjust:100%}
+body{height:100%;overflow:hidden;background:var(--bg2);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;color:var(--txt)}
+.scr{display:none;height:100dvh;height:100vh;flex-direction:column;overflow:hidden}
+.scr.on{display:flex}
+
+/* topbar */
+.topbar{display:flex;align-items:center;gap:8px;
+  padding:calc(env(safe-area-inset-top,0px) + 10px) 14px 10px;
+  background:var(--bg);border-bottom:var(--bdr);flex-shrink:0}
+.logo{width:32px;height:32px;border-radius:50%;background:var(--g);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo svg{width:19px;height:19px;fill:#fff}
+.tb-title{font-size:16px;font-weight:700;color:var(--txt);flex:1;padding-left:2px}
+.tbtn{padding:8px 13px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;
+  border:2px solid var(--g);background:var(--g);color:#fff;
+  -webkit-appearance:none;min-height:36px;font-family:inherit;white-space:nowrap}
+.tbtn.out{background:none;color:var(--g)}
+.tbtn.grey{border-color:#bbb;background:none;color:var(--txt2)}
+
+/* scroll body */
+.pg-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px}
+
+/* cards & sections */
+.card{background:var(--bg);border-radius:13px;border:var(--bdr);margin-bottom:14px;overflow:hidden}
+.card-hd{padding:11px 14px;background:var(--bg2);border-bottom:var(--bdr);
+  font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--g);
+  display:flex;align-items:center;justify-content:space-between}
+.list-row{display:flex;align-items:center;padding:11px 14px;border-bottom:var(--bdr);gap:10px}
+.list-row:last-child{border-bottom:none}
+.row-label{flex:1;font-size:14px;color:var(--txt);line-height:1.3}
+.row-sub{font-size:11px;color:var(--txt2);margin-top:2px}
+.del-btn{width:30px;height:30px;border-radius:50%;border:none;background:var(--rdl);
+  color:var(--rdd);font-size:18px;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;font-family:inherit;line-height:1}
+.add-btn-row{width:100%;padding:12px 14px;border:none;background:none;color:var(--g);
+  font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;gap:6px;border-top:var(--bdr)}
+
+/* grower cards on home */
+.grower-card{padding:13px 14px;border-bottom:var(--bdr);cursor:pointer;
+  display:flex;align-items:center;gap:10px}
+.grower-card:last-child{border-bottom:none}
+.grower-card:active{background:var(--bg2)}
+.gc-text{flex:1;min-width:0}
+.gc-name{font-size:15px;font-weight:700;color:var(--txt)}
+.gc-meta{font-size:12px;color:var(--txt2);margin-top:2px}
+.new-btn{width:100%;padding:14px;border:2px dashed #bbb;border-radius:13px;
+  background:none;color:var(--txt2);font-size:15px;font-weight:600;cursor:pointer;
+  font-family:inherit;margin-bottom:14px;display:block;text-align:center}
+.new-btn:active{background:var(--bg2)}
+
+/* field inputs on setup */
+.field-input-group{padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.field-input-group .full{grid-column:1/-1}
+.field-input-group label{font-size:11px;font-weight:700;color:var(--txt2);
+  text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:4px}
+.field-input-group input{width:100%;padding:9px 11px;border:var(--bdr);border-radius:9px;
+  font-size:14px;font-family:inherit;background:var(--bg);color:var(--txt);
+  -webkit-appearance:none;min-height:40px}
+.field-input-group input:focus{outline:none;border-color:var(--g);border-width:2px}
+
+/* inline add-field row */
+.inline-add{display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:var(--bdr)}
+.inline-add input{flex:1;padding:9px 11px;border:var(--bdr);border-radius:9px;
+  font-size:14px;font-family:inherit;background:var(--bg);color:var(--txt);-webkit-appearance:none}
+.inline-add input:focus{outline:none;border-color:var(--g);border-width:2px}
+.inline-add button{padding:9px 16px;border-radius:9px;border:none;background:var(--g);
+  color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+
+/* meta strip on check screen */
+.meta-strip{display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  padding:9px 14px;background:var(--bg2);border-bottom:var(--bdr);flex-shrink:0}
+.meta-strip .full{grid-column:1/-1}
+.meta-strip label{font-size:11px;color:var(--txt2);display:block;margin-bottom:3px;
+  font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.meta-strip input{padding:9px 11px;border:var(--bdr);border-radius:9px;font-size:14px;
+  background:var(--bg);color:var(--txt);width:100%;-webkit-appearance:none;
+  min-height:42px;font-family:inherit}
+.meta-strip input:focus{outline:none;border-color:var(--g);border-width:2px}
+.meta-val{padding:6px 0;font-size:14px;font-weight:600;color:var(--txt)}
+.meta-val.sub{font-size:12px;color:var(--txt2);font-weight:400}
+
+/* voice bar */
+.vbar{display:flex;align-items:center;gap:8px;
+  padding:8px 14px;background:var(--bg2);border-bottom:var(--bdr);flex-shrink:0}
+.micbtn{display:flex;align-items:center;gap:7px;padding:10px 16px;
+  border-radius:23px;border:2.5px solid var(--g);background:none;color:var(--g);
+  font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;
+  min-height:44px;min-width:88px;-webkit-appearance:none;font-family:inherit}
+.micbtn.on{background:var(--rd);border-color:var(--rd);color:#fff;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.mdot{width:10px;height:10px;border-radius:50%;background:currentColor;flex-shrink:0}
+.vchips{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  flex:1;padding-bottom:2px;scrollbar-width:none}
+.vchips::-webkit-scrollbar{display:none}
+.vchip{padding:7px 13px;border-radius:18px;font-size:13px;font-weight:600;
+  border:2px solid #ccc;background:var(--bg);color:var(--txt2);
+  cursor:pointer;white-space:nowrap;flex-shrink:0;min-height:38px;
+  font-family:inherit;-webkit-appearance:none}
+.vchip.on{background:var(--g);border-color:var(--g);color:#fff}
+
+.trow{padding:5px 14px 7px;background:var(--bg2);border-bottom:var(--bdr);flex-shrink:0;min-height:28px}
+.ttxt{font-size:12px;color:var(--txt2);font-style:italic;line-height:1.4}
+.ttxt.ok{color:var(--gd);font-style:normal;font-weight:700}
+.ttxt.er{color:var(--rd);font-style:normal;font-weight:600}
+
+/* grid */
+.gwrap{flex:1;overflow:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:max-content;min-width:100%}
+table thead{position:sticky;top:0;z-index:10}
+th,td{border-right:var(--bdr);border-bottom:var(--bdr)}
+tr:last-child td{border-bottom:none}
+th:last-child,td:last-child{border-right:none}
+.th-lbl{width:var(--lw);min-width:var(--lw);padding:6px 10px;font-size:10px;font-weight:700;
+  letter-spacing:.5px;text-transform:uppercase;color:var(--txt2);background:var(--bg3);
+  text-align:left;position:sticky;left:0;z-index:12}
+.th-f{width:var(--cw);min-width:var(--cw);padding:5px 3px;font-size:12px;font-weight:700;
+  text-align:center;background:var(--bg3);color:var(--txt);cursor:pointer;
+  white-space:nowrap;-webkit-user-select:none;user-select:none}
+.th-f.ac{background:var(--gl);color:var(--gd)}
+.th-add{width:40px;min-width:40px;padding:5px 3px;font-size:17px;
+  text-align:center;background:var(--bg3);color:var(--txt2);cursor:pointer}
+.td-g{position:sticky;left:0;z-index:9;width:var(--lw);min-width:var(--lw);
+  padding:5px 10px;font-size:10px;font-weight:800;letter-spacing:.6px;
+  text-transform:uppercase;color:var(--g);background:var(--bg3);border-right:var(--bdr)}
+.td-l{position:sticky;left:0;z-index:9;width:var(--lw);min-width:var(--lw);
+  padding:5px 10px;font-size:12px;color:var(--txt);background:var(--bg);
+  line-height:1.3;border-right:var(--bdr)}
+.td-l.custom{color:var(--txt2)}
+.cw{width:var(--cw);min-width:var(--cw)}
+.cw.ac{background:#edf9f4}
+.ci{width:100%;height:100%;display:block;text-align:center;padding:6px 2px;
+  font-size:14px;font-weight:500;font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  background:transparent;color:var(--txt);border:none;outline:none;min-height:36px}
+.ci.v{background:var(--gl);color:var(--gd);font-weight:700}
+.ci:focus{background:#b8e6ce!important;color:var(--gd);font-weight:700}
+
+.cwrap{padding:9px 14px;background:var(--bg2);border-bottom:var(--bdr);flex-shrink:0}
+.clbl{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--g);margin-bottom:5px}
+textarea{width:100%;padding:10px;border:var(--bdr);border-radius:9px;font-size:14px;
+  font-family:inherit;background:var(--bg);color:var(--txt);resize:none;height:60px;
+  line-height:1.5;-webkit-appearance:none}
+textarea:focus{outline:none;border-color:var(--g);border-width:2px}
+
+.bbar{display:flex;gap:8px;padding:10px 14px;background:var(--bg);border-top:var(--bdr);
+  flex-shrink:0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+.bbar button{flex:1;padding:13px;border-radius:11px;font-size:14px;font-weight:700;
+  cursor:pointer;min-height:48px;-webkit-appearance:none;font-family:inherit}
+.btn-g{background:var(--g);color:#fff;border:none}
+.btn-o{background:none;color:var(--g);border:2px solid var(--g)}
+.btn-grey{background:none;color:var(--txt2);border:2px solid #ccc}
+
+/* add-pest inline panel */
+.pest-panel{background:var(--bg);border-top:var(--bdr);padding:10px 14px;flex-shrink:0;display:none}
+.pest-panel.on{display:block}
+.pest-panel-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.pest-panel-row .full{grid-column:1/-1}
+.pest-panel label{font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;
+  letter-spacing:.3px;display:block;margin-bottom:3px}
+.pest-panel input,.pest-panel select{width:100%;padding:8px 10px;border:var(--bdr);
+  border-radius:8px;font-size:14px;font-family:inherit;background:var(--bg);
+  color:var(--txt);-webkit-appearance:none}
+.pest-panel input:focus,.pest-panel select:focus{outline:none;border-color:var(--g)}
+.pest-panel-btns{display:flex;gap:8px;margin-top:4px}
+.pest-panel-btns button{flex:1;padding:10px;border-radius:9px;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:inherit;min-height:44px}
+
+/* report */
+.rpt-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px}
+.rpth{font-size:20px;font-weight:800;color:var(--txt);margin-bottom:3px}
+.rptsub{font-size:12px;color:var(--txt2);margin-bottom:14px}
+.srow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.sc{background:var(--bg2);border-radius:11px;padding:11px 13px}
+.sc .sl{font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+.sc .sv{font-size:23px;font-weight:800;color:var(--txt)}
+.slbl{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--g);margin:14px 0 8px}
+.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;border:var(--bdr)}
+.rtbl{border-collapse:collapse;width:max-content;min-width:100%}
+.rtbl thead{position:sticky;top:0;z-index:5}
+.rtbl th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+  color:var(--txt2);padding:6px 7px;border-bottom:1px solid #dddbd5;
+  text-align:center;background:var(--bg3);white-space:nowrap}
+.rtbl th:first-child{text-align:left;position:sticky;left:0;z-index:6;min-width:140px}
+.rtbl td{padding:5px 7px;border-bottom:var(--bdr);text-align:center;color:var(--txt)}
+.rtbl td:first-child{text-align:left;position:sticky;left:0;background:var(--bg);
+  z-index:4;font-size:11px;min-width:140px;border-right:var(--bdr)}
+.rtbl tr:last-child td{border-bottom:none}
+.rgrp td{background:var(--bg3)!important;font-size:10px;font-weight:800;
+  letter-spacing:.6px;text-transform:uppercase;color:var(--g);padding:6px 7px 4px}
+.bdg{display:inline-block;padding:2px 6px;border-radius:8px;font-size:10px;
+  font-weight:800;vertical-align:middle;margin-left:3px}
+.bh{background:var(--rdl);color:var(--rdd)}
+.bw{background:var(--aml);color:var(--amd)}
+.abox{border-radius:10px;padding:10px 13px;margin-bottom:8px;font-size:13px;line-height:1.5;font-weight:500}
+.ah{background:var(--rdl);color:var(--rdd)}
+.aw{background:var(--aml);color:var(--amd)}
+.no-data{font-size:13px;color:var(--txt2);padding:6px 0}
+.cmts-rpt{font-size:13px;line-height:1.7;color:var(--txt);background:var(--bg2);border-radius:10px;padding:12px 14px}
+
+/* toast */
+.toast{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom,0px));left:50%;
+  transform:translateX(-50%) translateY(20px);background:#222;color:#fff;
+  padding:10px 20px;border-radius:22px;font-size:13px;font-weight:600;
+  opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:200;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media print{
+  body{overflow:auto!important;background:#fff!important}
+  .scr{display:none!important}
+  #s-rpt{display:block!important;height:auto!important;overflow:visible!important}
+  .topbar .tbtn,.bbar{display:none!important}
+  .rpt-scroll{overflow:visible!important;padding:20px}
+  .tblwrap{overflow:visible!important}
+}
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════
+     HOME — grower list
+════════════════════════════════ -->
+<div id="s-home" class="scr on">
+  <div class="topbar">
+    <div class="logo">
+      <svg viewBox="0 0 32 32"><circle cx="16" cy="9" r="5"/>
+        <ellipse cx="7" cy="21" rx="4" ry="6"/><ellipse cx="25" cy="21" rx="4" ry="6"/>
+        <ellipse cx="16" cy="24" rx="4.5" ry="6"/></svg>
+    </div>
+    <div class="tb-title">Cotton Crop Checker</div>
+    <button class="tbtn out" onclick="goScreen('s-pests')">Pests ✎</button>
+  </div>
+  <div class="pg-scroll">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+      color:var(--txt2);margin-bottom:10px">Growers &amp; seasons</div>
+    <button class="new-btn" onclick="goNewGrower()">＋ New grower / season setup</button>
+    <div class="card" id="grower-list-card">
+      <div id="grower-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     GROWER SETUP
+════════════════════════════════ -->
+<div id="s-setup" class="scr">
+  <div class="topbar">
+    <button class="tbtn out" onclick="goHomeFromSetup()">← Back</button>
+    <div class="tb-title" id="setup-title">Season setup</div>
+    <button class="tbtn" onclick="saveSetup(true)">Save &amp; check →</button>
+  </div>
+  <div class="pg-scroll">
+
+    <div class="card">
+      <div class="card-hd">Grower details</div>
+      <div class="field-input-group">
+        <div>
+          <label>Grower name</label>
+          <input type="text" id="su-grower" placeholder="e.g. Simmich"
+            autocorrect="off" autocapitalize="words" oninput="autoSaveSetup()">
+        </div>
+        <div>
+          <label>Season</label>
+          <input type="text" id="su-season" placeholder="e.g. 2025-26" oninput="autoSaveSetup()">
+        </div>
+        <div class="full">
+          <label>Property / block</label>
+          <input type="text" id="su-prop" placeholder="e.g. EG / EL / EF"
+            autocorrect="off" oninput="autoSaveSetup()">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd">
+        Fields for this season
+        <span style="font-size:11px;color:var(--txt2);font-weight:400;text-transform:none;letter-spacing:0">
+          (saved all season)
+        </span>
+      </div>
+      <div id="su-field-list"></div>
+      <div class="inline-add">
+        <input type="text" id="new-field-input" placeholder="Field name, e.g. EG3"
+          autocorrect="off" autocapitalize="characters"
+          onkeydown="if(event.key==='Enter')addSetupField()">
+        <button onclick="addSetupField()">Add</button>
+      </div>
+    </div>
+
+    <div style="text-align:center;font-size:12px;color:var(--txt2);padding:4px 0 8px;line-height:1.6">
+      Fields are saved to this grower's profile.<br>
+      Each new check day loads them instantly.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     PEST LIST MANAGEMENT
+════════════════════════════════ -->
+<div id="s-pests" class="scr">
+  <div class="topbar">
+    <button class="tbtn out" onclick="goScreen('s-home')">← Back</button>
+    <div class="tb-title">Pests &amp; measurements</div>
+  </div>
+  <div class="pg-scroll">
+    <div style="font-size:13px;color:var(--txt2);margin-bottom:12px;line-height:1.5">
+      Add custom pests or measurements. They appear in every check for all growers.
+    </div>
+    <div class="card">
+      <div class="card-hd">Custom pests &amp; measurements</div>
+      <div id="custom-pest-list"></div>
+      <div style="padding:12px 14px;border-top:var(--bdr)" id="add-pest-form">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div class="full" style="grid-column:1/-1">
+            <label style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;
+              letter-spacing:.3px;display:block;margin-bottom:4px">Name</label>
+            <input type="text" id="ap-name" placeholder="e.g. Spider mite, Boll size (mm)"
+              autocorrect="off"
+              style="width:100%;padding:9px 11px;border:var(--bdr);border-radius:9px;
+              font-size:14px;font-family:inherit;background:var(--bg);color:var(--txt);-webkit-appearance:none">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;
+              letter-spacing:.3px;display:block;margin-bottom:4px">Group</label>
+            <select id="ap-group"
+              style="width:100%;padding:9px 11px;border:var(--bdr);border-radius:9px;
+              font-size:14px;font-family:inherit;background:var(--bg);color:var(--txt);-webkit-appearance:none">
+              <option value="crop">Crop measurements</option>
+              <option value="helio">Heliothis & larvae</option>
+              <option value="suck" selected>Sucking pests</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;
+              letter-spacing:.3px;display:block;margin-bottom:4px">Voice keyword</label>
+            <input type="text" id="ap-voice" placeholder="e.g. spider mite"
+              autocorrect="off" autocapitalize="none"
+              style="width:100%;padding:9px 11px;border:var(--bdr);border-radius:9px;
+              font-size:14px;font-family:inherit;background:var(--bg);color:var(--txt);-webkit-appearance:none">
+          </div>
+        </div>
+        <button onclick="addCustomPest()"
+          style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--g);
+          color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
+          Add to list
+        </button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">Standard pests (read-only)</div>
+      <div id="std-pest-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     DATA ENTRY
+════════════════════════════════ -->
+<div id="s-main" class="scr">
+  <div class="topbar">
+    <button class="tbtn grey" onclick="goHomeFromCheck()" style="flex:0 0 auto;padding:8px 11px">⌂ Home</button>
+    <div class="tb-title" id="check-title" style="font-size:13px;padding-left:6px">Check</div>
+    <button class="tbtn" onclick="goRpt()" style="padding:8px 11px">Report →</button>
+  </div>
+
+  <div class="meta-strip">
+    <div>
+      <label>Grower</label>
+      <div class="meta-val" id="meta-grower">—</div>
+    </div>
+    <div>
+      <label>Date</label>
+      <input type="date" id="m-date">
+    </div>
+    <div class="full">
+      <label>Property &amp; season</label>
+      <div class="meta-val sub" id="meta-prop">—</div>
+    </div>
+  </div>
+
+  <div class="vbar">
+    <button class="micbtn" id="micbtn" onclick="toggleMic()">
+      <span class="mdot"></span><span id="miclbl">Speak</span>
+    </button>
+    <div class="vchips" id="vchips"></div>
+  </div>
+  <div class="trow">
+    <div class="ttxt" id="ttxt">Select a field above, tap Speak, say e.g. "mirid adult 0.25"</div>
+  </div>
+
+  <div class="gwrap">
+    <table id="gtbl"></table>
+  </div>
+
+  <div class="cwrap">
+    <div class="clbl">Comments &amp; recommendations</div>
+    <textarea id="comments" placeholder="Spray recommendations, observations, thresholds met..."></textarea>
+  </div>
+
+  <!-- inline add-pest panel -->
+  <div class="pest-panel" id="pest-panel">
+    <div style="font-size:12px;font-weight:700;color:var(--g);text-transform:uppercase;
+      letter-spacing:.5px;margin-bottom:8px">Add pest or measurement</div>
+    <div class="pest-panel-row">
+      <div class="full">
+        <label>Name</label>
+        <input type="text" id="pp-name" placeholder="e.g. Spider mite" autocorrect="off">
+      </div>
+      <div>
+        <label>Group</label>
+        <select id="pp-group">
+          <option value="crop">Crop</option>
+          <option value="helio">Heliothis</option>
+          <option value="suck" selected>Sucking</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div>
+        <label>Voice keyword</label>
+        <input type="text" id="pp-voice" placeholder="optional" autocorrect="off" autocapitalize="none">
+      </div>
+    </div>
+    <div class="pest-panel-btns">
+      <button onclick="closePestPanel()" class="btn-grey" style="flex:.4">Cancel</button>
+      <button onclick="addPestFromPanel()" class="btn-g">Add to grid</button>
+    </div>
+  </div>
+
+  <div class="bbar">
+    <button class="btn-grey" onclick="togglePestPanel()" style="flex:0.8;font-size:13px">+ Pest</button>
+    <button class="btn-g" onclick="goRpt()">Generate report</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     REPORT
+════════════════════════════════ -->
+<div id="s-rpt" class="scr">
+  <div class="topbar">
+    <button class="tbtn out" style="min-width:70px" onclick="goScreen('s-main')">← Back</button>
+    <div class="tb-title" style="padding-left:6px">Report</div>
+    <button class="tbtn" onclick="window.print()">Print / PDF</button>
+  </div>
+  <div class="rpt-scroll" id="rptbody"></div>
+  <div class="bbar">
+    <button class="btn-o" onclick="goScreen('s-main')">← Back to entry</button>
+    <button class="btn-g" onclick="window.print()">Print / save PDF</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════ */
+const GRP=[
+  {id:'crop', l:'Crop measurements'},
+  {id:'helio',l:'Heliothis & larvae'},
+  {id:'suck', l:'Sucking pests'},
+  {id:'other',l:'Other'},
+];
+const STD_PESTS=[
+  {k:'plants_m', l:'Plants / M',               g:'crop'},
+  {k:'fruit_ret',l:'Fruit retention %',         g:'crop'},
+  {k:'nodes',    l:'Node numbers',              g:'crop'},
+  {k:'nawf',     l:'NAWF',                      g:'crop'},
+  {k:'node_len', l:'Node length (cm)',          g:'crop'},
+  {k:'white_egg',l:'White egg',                 g:'helio'},
+  {k:'brown_egg',l:'Brown egg',                 g:'helio'},
+  {k:'helio_h',  l:'Heliothis (just hatched)', g:'helio'},
+  {k:'helio_s',  l:'Heliothis (very small)',   g:'helio'},
+  {k:'lar_sm',   l:'Small larvae',              g:'helio'},
+  {k:'lar_md',   l:'Medium larvae',             g:'helio'},
+  {k:'lar_lg',   l:'Large larvae',              g:'helio'},
+  {k:'lar_tot',  l:'Total larvae',              g:'helio'},
+  {k:'rboll',    l:'Rough boll worm',           g:'helio'},
+  {k:'tipworm',  l:'Tipworm eggs/larvae',       g:'helio'},
+  {k:'aphids',   l:'Aphids',                    g:'suck'},
+  {k:'flea',     l:'Flea beetle',               g:'suck'},
+  {k:'gvb',      l:'Green veg bug',             g:'suck'},
+  {k:'jassids',  l:'Jassids',                   g:'suck'},
+  {k:'mealy',    l:'Mealy bugs',                g:'suck'},
+  {k:'mir_a',    l:'Mirid - adult',             g:'suck'},
+  {k:'mir_n',    l:'Mirid - nymph',             g:'suck'},
+  {k:'mites',    l:'Mites',                     g:'suck'},
+  {k:'thrip',    l:'Thrip',                     g:'suck'},
+  {k:'thrip_d',  l:'Thrip damage',              g:'suck'},
+  {k:'ruth',     l:'Rutherglen bugs',           g:'suck'},
+  {k:'wfly',     l:'White fly (%)',              g:'suck'},
+  {k:'benef',    l:'Beneficials (L/M/H)',       g:'other'},
+  {k:'weeds',    l:'Weeds & other pests',       g:'other'},
+];
+const STD_VM=[
+  ['mirid adult',        ['mir_a']],
+  ['mirid nymph',        ['mir_n']],
+  ['green vegetable bug',['gvb']],
+  ['green veg bug',      ['gvb']],
+  ['white egg',          ['white_egg']],
+  ['brown egg',          ['brown_egg']],
+  ['flea beetle',        ['flea']],
+  ['mealy bugs',         ['mealy']],
+  ['mealy bug',          ['mealy']],
+  ['thrip damage',       ['thrip_d']],
+  ['white fly',          ['wfly']],
+  ['whitefly',           ['wfly']],
+  ['thrip',              ['thrip']],
+  ['rutherglen',         ['ruth']],
+  ['rough boll',         ['rboll']],
+  ['tipworm',            ['tipworm']],
+  ['beneficials',        ['benef']],
+  ['small larvae',       ['lar_sm']],
+  ['medium larvae',      ['lar_md']],
+  ['large larvae',       ['lar_lg']],
+  ['total larvae',       ['lar_tot']],
+  ['heliothis',          ['helio_h']],
+  ['fruit retention',    ['fruit_ret']],
+  ['node length',        ['node_len']],
+  ['node numbers',       ['nodes']],
+  ['nodes',              ['nodes']],
+  ['nawf',               ['nawf']],
+  ['aphids',             ['aphids']],
+  ['jassids',            ['jassids']],
+  ['mites',              ['mites']],
+  ['plants',             ['plants_m']],
+];
+const THR={mir_a:{w:.1,h:.3},mir_n:{w:.2,h:.5},gvb:{w:.1,h:.3},aphids:{w:50,h:100}};
+
+/* ═══════════════════════════════════════════
+   STORAGE  — works in both localStorage and
+   in Safari PWA (same origin = same storage)
+═══════════════════════════════════════════ */
+const LS_GROWERS     = 'ccc_growers_v2';
+const LS_CUSTOM_PESTS= 'ccc_custom_pests_v2';
+
+function lsGet(key,def){
+  try{const v=localStorage.getItem(key);return v!=null?JSON.parse(v):def;}
+  catch(e){return def;}
+}
+function lsSet(key,val){
+  try{localStorage.setItem(key,JSON.stringify(val));}
+  catch(e){showToast('Storage full — clear some browser data');}
+}
+
+/* ═══════════════════════════════════════════
+   APP STATE
+═══════════════════════════════════════════ */
+let growers     = lsGet(LS_GROWERS,[]);
+let customPests = lsGet(LS_CUSTOM_PESTS,[]);
+
+/* active check session */
+let activeGId   = null;   // grower id being checked/edited
+let sessionFields=[];     // field names for current check
+let checkData   = {};     // checkData[fieldIndex][pestKey] = value string
+let avf         = 0;      // active voice field index
+
+let recog=null, listening=false;
+
+function allPests(){return[...STD_PESTS,...customPests];}
+function allVM(){
+  const vm=[...STD_VM];
+  customPests.forEach(p=>{
+    if(p.voice&&p.voice.trim())vm.push([p.voice.trim().toLowerCase(),[p.k]]);
+  });
+  return vm;
+}
+
+/* ═══════════════════════════════════════════
+   SCREEN ROUTER
+═══════════════════════════════════════════ */
+function goScreen(id){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  closePestPanel();
+}
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+let toastTimer=null;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* ═══════════════════════════════════════════
+   HOME SCREEN
+═══════════════════════════════════════════ */
+function renderHome(){
+  const el=document.getElementById('grower-list');
+  if(!growers.length){
+    el.innerHTML=`<div style="padding:16px 14px;font-size:13px;color:var(--txt2);text-align:center">
+      No growers yet. Tap "New grower / season setup" to begin.</div>`;
+    return;
+  }
+  el.innerHTML=growers.map(g=>`
+    <div class="grower-card">
+      <div class="gc-text" onclick="startCheck('${g.id}')">
+        <div class="gc-name">${esc(g.grower||'Unnamed')}</div>
+        <div class="gc-meta">${esc(g.season||'')}${g.prop?' · '+esc(g.prop):''}
+          · ${(g.fields||[]).length} field${(g.fields||[]).length!==1?'s':''}</div>
+      </div>
+      <button class="tbtn out" style="padding:6px 10px;font-size:12px"
+        onclick="openEdit('${g.id}')">Edit</button>
+      <button class="del-btn" onclick="deleteGrower('${g.id}')">×</button>
+    </div>`).join('');
+}
+
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function goHomeFromSetup(){
+  /* save whatever is in the fields before leaving */
+  saveSetup(false);
+  goScreen('s-home');
+  renderHome();
+}
+
+function goHomeFromCheck(){
+  /* just navigate — check data stays in memory if user comes back */
+  goScreen('s-home');
+  renderHome();
+}
+
+/* ═══════════════════════════════════════════
+   GROWER SETUP
+═══════════════════════════════════════════ */
+function goNewGrower(){
+  /* create a stub record immediately so auto-save has somewhere to write */
+  const id='g_'+Date.now();
+  const g={id,grower:'',season:'',prop:'',fields:[]};
+  growers.push(g);
+  lsSet(LS_GROWERS,growers);
+  activeGId=id;
+  populateSetupScreen(g);
+  goScreen('s-setup');
+  setTimeout(()=>document.getElementById('su-grower').focus(),400);
+}
+
+function openEdit(id){
+  const g=growers.find(x=>x.id===id);
+  if(!g)return;
+  activeGId=id;
+  populateSetupScreen(g);
+  goScreen('s-setup');
+}
+
+function populateSetupScreen(g){
+  document.getElementById('su-grower').value =g.grower||'';
+  document.getElementById('su-season').value =g.season||'';
+  document.getElementById('su-prop').value   =g.prop||'';
+  document.getElementById('setup-title').textContent=g.grower||'Season setup';
+  document.getElementById('new-field-input').value='';
+  renderSetupFields();
+}
+
+/* called on every keystroke in setup form */
+function autoSaveSetup(){
+  const g=growers.find(x=>x.id===activeGId);
+  if(!g)return;
+  g.grower=document.getElementById('su-grower').value.trim();
+  g.season=document.getElementById('su-season').value.trim();
+  g.prop  =document.getElementById('su-prop').value.trim();
+  document.getElementById('setup-title').textContent=g.grower||'Season setup';
+  lsSet(LS_GROWERS,growers);
+}
+
+/* explicit save — optionally then launch a check */
+function saveSetup(thenCheck){
+  const g=growers.find(x=>x.id===activeGId);
+  if(!g)return;
+  g.grower=document.getElementById('su-grower').value.trim();
+  g.season=document.getElementById('su-season').value.trim();
+  g.prop  =document.getElementById('su-prop').value.trim();
+  if(thenCheck){
+    if(!g.grower){alert('Please enter a grower name.');return;}
+    if(!g.fields||!g.fields.length){alert('Please add at least one field.');return;}
+  }
+  lsSet(LS_GROWERS,growers);
+  showToast('Saved ✓');
+  if(thenCheck) startCheck(activeGId);
+}
+
+function renderSetupFields(){
+  const g=growers.find(x=>x.id===activeGId);
+  if(!g){return;}
+  const c=document.getElementById('su-field-list');
+  if(!g.fields||!g.fields.length){
+    c.innerHTML=`<div style="padding:11px 14px;font-size:13px;color:var(--txt2)">
+      No fields yet — add them below.</div>`;
+    return;
+  }
+  c.innerHTML=g.fields.map((f,i)=>`
+    <div class="list-row">
+      <div class="row-label">${esc(f)}</div>
+      <button class="del-btn" onclick="removeField(${i})">×</button>
+    </div>`).join('');
+}
+
+function addSetupField(){
+  const inp=document.getElementById('new-field-input');
+  const name=inp.value.trim();
+  if(!name)return;
+  const g=growers.find(x=>x.id===activeGId);
+  if(!g)return;
+  if(!g.fields)g.fields=[];
+  if(g.fields.includes(name)){showToast('Field already exists');return;}
+  g.fields.push(name);
+  lsSet(LS_GROWERS,growers);
+  inp.value='';
+  renderSetupFields();
+  showToast('Field added ✓');
+}
+
+function removeField(i){
+  const g=growers.find(x=>x.id===activeGId);
+  if(!g)return;
+  g.fields.splice(i,1);
+  lsSet(LS_GROWERS,growers);
+  renderSetupFields();
+}
+
+function deleteGrower(id){
+  if(!confirm('Delete this grower and all their settings?'))return;
+  growers=growers.filter(g=>g.id!==id);
+  lsSet(LS_GROWERS,growers);
+  renderHome();
+}
+
+/* ═══════════════════════════════════════════
+   LAUNCH A CHECK FOR A GROWER
+═══════════════════════════════════════════ */
+function startCheck(id){
+  const g=growers.find(x=>x.id===id);
+  if(!g){alert('Grower not found.');return;}
+  if(!g.fields||!g.fields.length){
+    alert('No fields set up for this grower.\nTap Edit to add fields first.');
+    return;
+  }
+  activeGId=id;
+  sessionFields=[...g.fields];
+  /* fresh check data */
+  checkData={};
+  sessionFields.forEach((_,i)=>checkData[i]={});
+  avf=0;
+
+  document.getElementById('m-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('meta-grower').textContent=g.grower||'—';
+  document.getElementById('meta-prop').textContent=
+    [g.prop,g.season].filter(Boolean).join(' · ')||'—';
+  document.getElementById('check-title').textContent=g.grower||'Check';
+  document.getElementById('comments').value='';
+
+  renderChips();
+  buildGrid();
+  goScreen('s-main');
+}
+
+/* ═══════════════════════════════════════════
+   PEST MANAGEMENT SCREEN
+═══════════════════════════════════════════ */
+function renderPestScreen(){
+  /* custom list */
+  const cl=document.getElementById('custom-pest-list');
+  cl.innerHTML=customPests.length
+    ? customPests.map((p,i)=>`
+        <div class="list-row">
+          <div>
+            <div class="row-label">${esc(p.l)}</div>
+            <div class="row-sub">${GRP.find(g=>g.id===p.g)?.l||p.g}
+              ${p.voice?' · voice: "'+esc(p.voice)+'"':''}</div>
+          </div>
+          <button class="del-btn" onclick="deleteCustomPest(${i})">×</button>
+        </div>`).join('')
+    : `<div style="padding:11px 14px;font-size:13px;color:var(--txt2)">No custom pests yet.</div>`;
+
+  /* std list */
+  document.getElementById('std-pest-list').innerHTML=
+    STD_PESTS.map(p=>`
+      <div class="list-row" style="padding:8px 14px">
+        <div>
+          <div class="row-label" style="font-size:13px">${esc(p.l)}</div>
+          <div class="row-sub">${GRP.find(g=>g.id===p.g)?.l||p.g}</div>
+        </div>
+      </div>`).join('');
+}
+
+function addCustomPest(){
+  const name=document.getElementById('ap-name').value.trim();
+  if(!name){alert('Please enter a name.');return;}
+  const grp  =document.getElementById('ap-group').value;
+  const voice=document.getElementById('ap-voice').value.trim().toLowerCase();
+  const key  ='cp_'+Date.now();
+  customPests.push({k:key,l:name,g:grp,voice,custom:true});
+  lsSet(LS_CUSTOM_PESTS,customPests);
+  document.getElementById('ap-name').value='';
+  document.getElementById('ap-voice').value='';
+  renderPestScreen();
+  showToast('Pest added ✓');
+}
+
+function deleteCustomPest(i){
+  if(!confirm('Remove "'+customPests[i].l+'"?'))return;
+  customPests.splice(i,1);
+  lsSet(LS_CUSTOM_PESTS,customPests);
+  renderPestScreen();
+}
+
+/* ═══════════════════════════════════════════
+   INLINE ADD-PEST PANEL (from check screen)
+═══════════════════════════════════════════ */
+function togglePestPanel(){
+  const p=document.getElementById('pest-panel');
+  p.classList.toggle('on');
+  if(p.classList.contains('on'))
+    setTimeout(()=>document.getElementById('pp-name').focus(),200);
+}
+function closePestPanel(){
+  document.getElementById('pest-panel').classList.remove('on');
+}
+function addPestFromPanel(){
+  const name=document.getElementById('pp-name').value.trim();
+  if(!name){alert('Please enter a name.');return;}
+  const grp  =document.getElementById('pp-group').value;
+  const voice=document.getElementById('pp-voice').value.trim().toLowerCase();
+  const key  ='cp_'+Date.now();
+  const pest ={k:key,l:name,g:grp,voice,custom:true};
+  customPests.push(pest);
+  lsSet(LS_CUSTOM_PESTS,customPests);
+  /* add data slot for all fields */
+  sessionFields.forEach((_,i)=>{if(!checkData[i])checkData[i]={};});
+  document.getElementById('pp-name').value='';
+  document.getElementById('pp-voice').value='';
+  closePestPanel();
+  buildGrid();
+  renderPestScreen();
+  showToast(name+' added ✓');
+}
+
+/* ═══════════════════════════════════════════
+   VOICE FIELD CHIPS
+═══════════════════════════════════════════ */
+function renderChips(){
+  document.getElementById('vchips').innerHTML=
+    sessionFields.map((f,i)=>
+      `<button class="vchip${i===avf?' on':''}" onclick="setAVF(${i})">${esc(f)}</button>`
+    ).join('');
+}
+function setAVF(i){
+  avf=i;
+  renderChips();
+  document.querySelectorAll('.th-f').forEach((el,j)=>el.classList.toggle('ac',j===i));
+  document.querySelectorAll('td.cw').forEach(el=>el.classList.toggle('ac',+el.dataset.fi===i));
+}
+
+/* ═══════════════════════════════════════════
+   GRID
+═══════════════════════════════════════════ */
+function buildGrid(){
+  const t=document.getElementById('gtbl');
+  const pests=allPests();
+  let h='<thead><tr>';
+  h+=`<th class="th-lbl">Pest / measurement</th>`;
+  sessionFields.forEach((f,i)=>
+    h+=`<th class="th-f${i===avf?' ac':''}" onclick="setAVF(${i})">${esc(f)}</th>`
+  );
+  h+=`<th class="th-add" onclick="togglePestPanel()" title="Add pest">＋</th>`;
+  h+='</tr></thead><tbody>';
+  let lg='';
+  pests.forEach(p=>{
+    if(p.g!==lg){
+      const g=GRP.find(x=>x.id===p.g);
+      h+=`<tr><td class="td-g" colspan="${sessionFields.length+2}">${g?g.l:p.g}</td></tr>`;
+      lg=p.g;
+    }
+    h+=`<tr><td class="td-l${p.custom?' custom':''}">${esc(p.l)}</td>`;
+    sessionFields.forEach((_,i)=>{
+      const v=(checkData[i]&&checkData[i][p.k]!==undefined)?checkData[i][p.k]:'';
+      h+=`<td class="cw${i===avf?' ac':''}" data-fi="${i}">`;
+      h+=`<input class="ci${v?' v':''}" type="text" inputmode="decimal"`;
+      h+=` value="${esc(v)}" placeholder="—" data-fi="${i}" data-pk="${p.k}"`;
+      h+=` onchange="cset(this)" onfocus="setAVF(${i})">`;
+      h+=`</td>`;
+    });
+    h+=`<td></td></tr>`;
+  });
+  h+='</tbody>';
+  t.innerHTML=h;
+}
+
+function cset(el){
+  const fi=+el.dataset.fi, pk=el.dataset.pk, v=el.value.trim();
+  if(!checkData[fi])checkData[fi]={};
+  if(v){checkData[fi][pk]=v;el.classList.add('v');}
+  else{delete checkData[fi][pk];el.classList.remove('v');}
+}
+
+/* ═══════════════════════════════════════════
+   VOICE
+═══════════════════════════════════════════ */
+function setT(txt,cls){
+  const el=document.getElementById('ttxt');
+  el.textContent=txt;
+  el.className='ttxt'+(cls?' '+cls:'');
+}
+function toggleMic(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
+    alert('Voice input needs:\n• iPhone/iPad: Safari (iOS 14.5+)\n• Android: Chrome or Edge');return;
+  }
+  if(listening){recog&&recog.stop();return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recog=new SR();
+  recog.lang='en-AU';recog.continuous=false;recog.interimResults=true;recog.maxAlternatives=3;
+  recog.onstart=()=>{
+    listening=true;
+    document.getElementById('micbtn').classList.add('on');
+    document.getElementById('miclbl').textContent='Listening…';
+    setT('Listening — speak clearly…','');
+  };
+  recog.onend=()=>{
+    listening=false;
+    document.getElementById('micbtn').classList.remove('on');
+    document.getElementById('miclbl').textContent='Speak';
+  };
+  recog.onresult=(e)=>{
+    const last=e.results[e.results.length-1];
+    setT(last[0].transcript.toLowerCase().trim(),'');
+    if(last.isFinal){
+      const alts=[];
+      for(let a=0;a<last.length;a++)alts.push(last[a].transcript.toLowerCase().trim());
+      parseV(alts);
+    }
+  };
+  recog.onerror=(ev)=>{
+    listening=false;
+    document.getElementById('micbtn').classList.remove('on');
+    document.getElementById('miclbl').textContent='Speak';
+    const msgs={
+      'not-allowed':'Microphone blocked — Settings → Safari → Microphone → Allow.',
+      'no-speech':'Nothing heard. Tap Speak and try again.',
+      'network':'No internet — voice needs a connection. Type values manually.',
+    };
+    setT(msgs[ev.error]||`Mic error: ${ev.error}`,'er');
+  };
+  recog.start();
+}
+function parseV(alts){
+  const vm=allVM();
+  for(const text of alts){
+    const nm=text.match(/(\d+\.?\d*)/);
+    if(!nm)continue;
+    const num=nm[1];
+    const tn=text.replace(num,'').replace(/[^\w\s]/g,'').trim();
+    for(const [ph,keys] of vm){
+      if(tn.includes(ph)){
+        if(!checkData[avf])checkData[avf]={};
+        keys.forEach(k=>checkData[avf][k]=num);
+        const lbl=allPests().find(p=>keys.includes(p.k))?.l||ph;
+        setT(`✓  ${lbl} = ${num}  →  ${sessionFields[avf]}`,'ok');
+        document.querySelectorAll(`.ci[data-fi="${avf}"]`).forEach(el=>{
+          if(keys.includes(el.dataset.pk)){
+            el.value=checkData[avf][el.dataset.pk]||'';
+            el.classList.toggle('v',!!el.value);
+          }
+        });
+        return;
+      }
+    }
+  }
+  const first=alts[0]||'';
+  setT(first.match(/\d/)
+    ?`Not recognised: "${first}" — say e.g. "mirid adult 0.25"`
+    :'No number heard — say e.g. "mirid adult 0.25"','er');
+}
+
+/* ═══════════════════════════════════════════
+   REPORT
+═══════════════════════════════════════════ */
+function goRpt(){buildRpt();document.getElementById('rptbody').scrollTop=0;goScreen('s-rpt');}
+function buildRpt(){
+  const g=growers.find(x=>x.id===activeGId)||{};
+  const date    =document.getElementById('m-date').value||'—';
+  const comments=document.getElementById('comments').value.trim();
+  const pests   =allPests();
+  const af=sessionFields.filter((_,i)=>Object.keys(checkData[i]||{}).length>0);
+  let tot=0,alerts=[];
+  af.forEach(f=>{
+    const i=sessionFields.indexOf(f);
+    Object.keys(checkData[i]).forEach(k=>{
+      tot++;
+      const v=parseFloat(checkData[i][k]);
+      if(THR[k]&&!isNaN(v)){
+        const lbl=pests.find(p=>p.k===k)?.l||k;
+        if(v>=THR[k].h)     alerts.push({f,lbl,v,lv:'h'});
+        else if(v>=THR[k].w)alerts.push({f,lbl,v,lv:'w'});
+      }
+    });
+  });
+  let h=`
+<div class="rpth">Crop checking report</div>
+<div class="rptsub">${esc(g.grower||'—')} &nbsp;|&nbsp; ${esc(g.prop||'—')}
+  ${g.season?' &nbsp;|&nbsp; '+esc(g.season):''} &nbsp;|&nbsp; ${esc(date)}</div>
+<div class="srow">
+  <div class="sc"><div class="sl">Fields checked</div><div class="sv">${af.length}</div></div>
+  <div class="sc"><div class="sl">Readings</div><div class="sv">${tot}</div></div>
+</div>
+<div class="slbl">Alerts</div>`;
+  if(alerts.length){
+    alerts.forEach(a=>{
+      h+=`<div class="abox ${a.lv==='h'?'ah':'aw'}">
+        <strong>${a.lv==='h'?'⚠ Above threshold':'~ Watch'}</strong>:
+        ${esc(a.lbl)} in <strong>${esc(a.f)}</strong> &mdash; ${a.v}/m</div>`;
+    });
+  } else {
+    h+=`<div class="no-data">No pests above threshold. Continue monitoring.</div>`;
+  }
+  const rp=pests.filter(p=>af.some(f=>{
+    const i=sessionFields.indexOf(f);return checkData[i]&&checkData[i][p.k]!==undefined;
+  }));
+  h+=`<div class="slbl">Readings by field</div>`;
+  if(rp.length&&af.length){
+    h+=`<div class="tblwrap"><table class="rtbl">
+      <thead><tr><th>Pest / measurement</th>${af.map(f=>`<th>${esc(f)}</th>`).join('')}</tr></thead>
+      <tbody>`;
+    let lg='';
+    rp.forEach(p=>{
+      if(p.g!==lg){
+        const grp=GRP.find(x=>x.id===p.g);
+        h+=`<tr class="rgrp"><td colspan="${af.length+1}">${grp?grp.l:p.g}</td></tr>`;
+        lg=p.g;
+      }
+      h+=`<tr><td>${esc(p.l)}</td>`;
+      af.forEach(f=>{
+        const i=sessionFields.indexOf(f);
+        const v=(checkData[i]&&checkData[i][p.k]!==undefined)?checkData[i][p.k]:'';
+        let bdg='';
+        if(v&&THR[p.k]){
+          const vn=parseFloat(v);
+          if(vn>=THR[p.k].h)      bdg=`<span class="bdg bh">!</span>`;
+          else if(vn>=THR[p.k].w) bdg=`<span class="bdg bw">~</span>`;
+        }
+        h+=`<td>${v?esc(v):'&mdash;'}${bdg}</td>`;
+      });
+      h+=`</tr>`;
+    });
+    h+=`</tbody></table></div>`;
+  } else {
+    h+=`<div class="no-data">No readings recorded yet.</div>`;
+  }
+  if(comments){
+    h+=`<div class="slbl">Comments &amp; recommendations</div>
+      <div class="cmts-rpt">${esc(comments).replace(/\n/g,'<br>')}</div>`;
+  }
+  h+=`<div style="height:16px"></div>`;
+  document.getElementById('rptbody').innerHTML=h;
+}
+
+/* ═══════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════ */
+renderHome();
+renderPestScreen();
+</script>
+</body>
+</html>
